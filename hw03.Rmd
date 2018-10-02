@@ -1,0 +1,262 @@
+---
+title: "STAT545 hw03"
+output: github_document
+---
+
+<style type="text/css">
+.twoC {width: 100%}
+.twoCl {width: 100%}
+.clearer {clear: both}
+.twoC table {max-width: 35%; float: left; max-height: 430px}
+.twoC img {max-width: 65%; float: right}
+.twoCl table {max-width: 35%; float: left; max-height: 860px}
+.twoCl img {max-width: 65%; float: right}
+</style>
+
+## Setting ups
+
+First we need to install and load packages.
+```{r}
+#install.packages("tidyverse")
+#install.packages("gapminder")
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(gapminder))
+```
+
+Now we are ready to go!
+
+## Tasks
+
+### Get the maximum and minimum of GDP per capita for all continents.
+
+```{r eval=FALSE}
+a <- gapminder %>%
+  group_by(continent) %>%
+  summarise(min = min(gdpPercap),
+            max = max(gdpPercap)) %>%
+  gather("type", "value", min:max)
+
+knitr::kable(a)
+
+a %>% ggplot(aes(x = continent, fill = type)) + 
+  geom_bar(aes(y = value), stat = "identity", position="dodge") +
+  scale_y_log10()
+```
+
+<div class="twoC">
+```{r results = 'asis', echo=FALSE}
+a <- gapminder %>%
+  group_by(continent) %>%
+  summarise(min = min(gdpPercap),
+            max = max(gdpPercap)) %>%
+  gather("type", "value", min:max)
+
+knitr::kable(a)
+
+a %>% ggplot(aes(x = continent, fill = type)) + 
+  geom_bar(aes(y = value), stat = "identity", position="dodge") +
+  scale_y_log10()
+```
+</div><div class="clearer"></div>
+
+
+### Look at the spread of GDP per capita within the continents.
+
+```{r eval=FALSE}
+a <- gapminder %>%
+  group_by(continent) %>%
+  select(continent, gdpPercap) %>%
+  summarise(min = min(gdpPercap),
+            max = max(gdpPercap),
+            mean = mean(gdpPercap),
+            Qu1 = quantile(gdpPercap, 0.25),
+            median = median(gdpPercap),
+            Qu3 = quantile(gdpPercap, 0.75))
+
+knitr::kable(a)
+
+gapminder %>%
+  ggplot(aes(x = gdpPercap, group = continent, color = continent)) +
+  geom_density() +
+  scale_x_log10()
+```
+
+<div class="twoC">
+```{r results = 'asis', echo=FALSE}
+a <- gapminder %>%
+  group_by(continent) %>%
+  select(continent, gdpPercap) %>%
+  summarise(min = min(gdpPercap),
+            max = max(gdpPercap),
+            mean = mean(gdpPercap),
+            Qu1 = quantile(gdpPercap, 0.25),
+            median = median(gdpPercap),
+            Qu3 = quantile(gdpPercap, 0.75))
+
+knitr::kable(a)
+
+gapminder %>%
+  ggplot(aes(y = gdpPercap, x = continent)) +
+  geom_violin() +
+  scale_y_log10() +
+  geom_jitter(aes(size = pop), alpha = 0.2)
+```
+</div><div class="clearer"></div>
+
+### Compute a mean life expectency weighted by population. 
+
+```{r eval=FALSE}
+a <- gapminder %>%
+  group_by(year) %>%
+  summarise(wtd_lifeExp = weighted.mean(lifeExp, pop))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, wtd_lifeExp)) + 
+  geom_point() + 
+  geom_line()
+```
+
+<div class="twoC">
+```{r results = 'asis', echo=FALSE}
+a <- gapminder %>%
+  group_by(year) %>%
+  summarise(wtd_lifeExp = weighted.mean(lifeExp, pop))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, wtd_lifeExp)) + 
+  geom_point() + 
+  geom_line()
+```
+</div><div class="clearer"></div>
+
+### How is life expectancy changing over time on different continents?
+
+```{r eval=FALSE}
+a <- gapminder %>%
+  group_by(continent, year) %>%
+  summarise(wtd_lifeExp = weighted.mean(lifeExp, pop))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, wtd_lifeExp)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent)) +
+  geom_smooth(method = "loess")
+
+```
+
+<div class="twoC">
+```{r results = 'asis', echo=FALSE}
+a <- gapminder %>%
+  group_by(continent, year) %>%
+  summarise(wtd_lifeExp = weighted.mean(lifeExp, pop))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, wtd_lifeExp)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent)) +
+  geom_smooth(method = "loess")
+
+```
+</div><div class="clearer"></div>
+
+### Report the absolute and/or relative abundance of countries with low life expectancy over time by continent.
+
+```{r eval=FALSE}
+a <- gapminder %>%
+  group_by(continent, year) %>%
+  mutate(wtd_lifeExp = weighted.mean(lifeExp, pop)) %>%
+  summarise(low_ct = sum(lifeExp < wtd_lifeExp),
+            low_ct_rl = low_ct/length(country))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, low_ct)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent))
+
+a %>% ggplot(aes(year, low_ct_rl)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent))
+```
+<div class="twoCl">
+```{r results = 'asis', echo=FALSE}
+a <- gapminder %>%
+  group_by(continent, year) %>%
+  mutate(wtd_lifeExp = weighted.mean(lifeExp, pop)) %>%
+  summarise(low_ct = sum(lifeExp < wtd_lifeExp),
+            low_ct_rl = low_ct/length(country))
+
+knitr::kable(a)
+
+a %>% ggplot(aes(year, low_ct)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent))
+
+a %>% ggplot(aes(year, low_ct_rl)) + 
+  geom_point(aes(color = continent)) + 
+  geom_line(aes(color = continent))
+```
+</div><div class="clearer"></div>
+
+### Find countries with interesting stories.
+
+Interesting stories always come from changes. So first I calculate the range of life expectency, population, gdp per capita and whole gdp for each country.
+```{r}
+a <- gapminder %>%
+  mutate(gdp = gdpPercap * pop) %>%
+  group_by(country) %>%
+  summarise(range_life = max(lifeExp) - min(lifeExp),
+            range_pop = max(pop) - min(pop),
+            range_gpc = max(gdpPercap) - min(gdpPercap),
+            range_gdp = max(gdp) - min(gdp))
+```
+
+Now we can check the data and plot for the most various countries.
+```{r, eval=FALSE}
+knitr::kable(head(arrange(a, desc(range_life))))
+range_lif <- filter(gapminder, country %in% select(head(arrange(a, desc(range_life))), country)$country)
+range_lif %>% ggplot(aes(year, lifeExp, color=country)) + geom_point() + geom_line()
+```
+```{r, results='asis', echo=FALSE}
+knitr::kable(head(arrange(a, desc(range_life))))
+range_lif <- filter(gapminder, country %in% select(head(arrange(a, desc(range_life))), country)$country)
+range_lif %>% ggplot(aes(year, lifeExp, color=country)) + geom_point() + geom_line()
+```
+
+```{r, eval=FALSE}
+knitr::kable(head(arrange(a, desc(range_pop))))
+range_pop <- filter(gapminder, country %in% select(head(arrange(a, desc(range_pop))), country)$country)
+range_pop %>% ggplot(aes(year, pop, color=country)) + geom_point() + geom_line()
+```
+```{r, results='asis', echo=FALSE}
+knitr::kable(head(arrange(a, desc(range_pop))))
+range_pop <- filter(gapminder, country %in% select(head(arrange(a, desc(range_pop))), country)$country)
+range_pop %>% ggplot(aes(year, pop, color=country)) + geom_point() + geom_line()
+```
+
+```{r, eval=FALSE}
+knitr::kable(head(arrange(a, desc(range_gpc))))
+range_gpc <- filter(gapminder, country %in% select(head(arrange(a, desc(range_gpc))), country)$country)
+range_gpc %>% ggplot(aes(year, gdpPercap, color=country)) + geom_point() + geom_line()
+```
+```{r, results='asis', echo=FALSE}
+knitr::kable(head(arrange(a, desc(range_gpc))))
+range_gpc <- filter(gapminder, country %in% select(head(arrange(a, desc(range_gpc))), country)$country)
+range_gpc %>% ggplot(aes(year, gdpPercap, color=country)) + geom_point() + geom_line()
+```
+
+```{r, eval=FALSE}
+knitr::kable(head(arrange(a, desc(range_gdp))))
+range_gdp <- filter(gapminder, country %in% select(head(arrange(a, desc(range_gdp))), country)$country)
+range_gdp %>% ggplot(aes(year, gdpPercap * pop, color=country)) + geom_point() + geom_line()
+```
+```{r, results='asis', echo=FALSE}
+knitr::kable(head(arrange(a, desc(range_gdp))))
+range_gdp <- filter(gapminder, country %in% select(head(arrange(a, desc(range_gdp))), country)$country)
+range_gdp %>% ggplot(aes(year, gdpPercap * pop, color=country)) + geom_point() + geom_line()
+```
+
